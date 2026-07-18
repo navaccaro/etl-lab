@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .venv/
+.coverage
+htmlcov/
 
 # Environment
 .env
@@ -10,14 +12,15 @@ __pycache__/
 # IDE
 .vscode/
 
-# macOS
+# OS
 .DS_Store
 
 # Logs
 *.log
 
 # Data
-data/raw/
+data/raw/*
+!data/raw/.gitkeep
 
 # Docker
 postgres_data/
