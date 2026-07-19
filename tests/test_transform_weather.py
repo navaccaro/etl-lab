@@ -1,6 +1,6 @@
 import pytest
 
-from scripts.transform_weather import transform_weather
+from weather_etl.transform_weather import transform_weather
 
 
 def make_valid_payload():
