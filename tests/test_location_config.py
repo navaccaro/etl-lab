@@ -166,3 +166,124 @@ def test_disabled_location_is_not_returned(
     )
 
     assert locations == []
+
+def test_malformed_yaml_raises(tmp_path: Path) -> None:
+    locations_directory = tmp_path / "locations"
+    locations_directory.mkdir()
+
+    schema_path = tmp_path / "schema.json"
+    write_schema(schema_path)
+
+    location_path = locations_directory / "broken-location.yaml"
+    location_path.write_text(
+        "location_id: broken-location\nlatitude: [",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(yaml.YAMLError):
+        load_locations(
+            locations_directory=locations_directory,
+            schema_path=schema_path,
+        )
+
+
+def test_location_missing_required_field_raises(
+    tmp_path: Path,
+) -> None:
+    locations_directory = tmp_path / "locations"
+    locations_directory.mkdir()
+
+    schema_path = tmp_path / "schema.json"
+    write_schema(schema_path)
+
+    write_location(
+        locations_directory / "missing-timezone.yaml",
+    )
+
+    location_path = locations_directory / "missing-timezone.yaml"
+    location = yaml.safe_load(location_path.read_text(encoding="utf-8"))
+    del location["timezone"]
+
+    location_path.write_text(
+        yaml.safe_dump(location, sort_keys=False),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="timezone",
+    ):
+        load_locations(
+            locations_directory=locations_directory,
+            schema_path=schema_path,
+        )
+
+
+def test_location_with_extra_field_raises(
+    tmp_path: Path,
+) -> None:
+    locations_directory = tmp_path / "locations"
+    locations_directory.mkdir()
+
+    schema_path = tmp_path / "schema.json"
+    write_schema(schema_path)
+
+    write_location(
+        locations_directory / "extra-field.yaml",
+        unsupported_field="not allowed",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Additional properties are not allowed",
+    ):
+        load_locations(
+            locations_directory=locations_directory,
+            schema_path=schema_path,
+        )
+
+
+def test_invalid_coordinate_raises(tmp_path: Path) -> None:
+    locations_directory = tmp_path / "locations"
+    locations_directory.mkdir()
+
+    schema_path = tmp_path / "schema.json"
+    write_schema(schema_path)
+
+    write_location(
+        locations_directory / "bad-coordinate.yaml",
+        latitude=95.0,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="95.0 is greater than the maximum of 90",
+    ):
+        load_locations(
+            locations_directory=locations_directory,
+            schema_path=schema_path,
+        )
+
+
+def test_location_id_must_match_filename(
+    tmp_path: Path,
+) -> None:
+    locations_directory = tmp_path / "locations"
+    locations_directory.mkdir()
+
+    schema_path = tmp_path / "schema.json"
+    write_schema(schema_path)
+
+    write_location(
+        locations_directory / "chicago-il.yaml",
+        location_id="milwaukee-wi",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="does not match filename",
+    ):
+        load_locations(
+            locations_directory=locations_directory,
+            schema_path=schema_path,
+        )
