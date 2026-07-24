@@ -80,6 +80,35 @@ def _validate_unique_locations(
         seen_coordinates.add(coordinates)
 
 
+def _validate_unique_locations(
+    locations: list[WeatherLocation],
+) -> None:
+    """Reject duplicate location IDs and coordinates."""
+
+    seen_ids: set[str] = set()
+    seen_coordinates: set[tuple[float, float]] = set()
+
+    for location in locations:
+        if location.location_id in seen_ids:
+            raise ValueError(
+                f"Duplicate location ID: {location.location_id}"
+            )
+
+        coordinates = (
+            location.latitude,
+            location.longitude,
+        )
+
+        if coordinates in seen_coordinates:
+            raise ValueError(
+                "Duplicate location coordinates: "
+                f"{location.latitude}, {location.longitude}"
+            )
+
+        seen_ids.add(location.location_id)
+        seen_coordinates.add(coordinates)
+
+
 def load_locations(
     locations_directory: Path = LOCATIONS_DIRECTORY,
     schema_path: Path = SCHEMA_PATH,
@@ -117,9 +146,10 @@ def load_locations(
 
         all_locations.append(location)
 
-        if location.enabled:
-            locations.append(location)
-
     _validate_unique_locations(all_locations)
 
-    return locations
+    return [
+        location
+        for location in all_locations
+        if location.enabled
+    ]
