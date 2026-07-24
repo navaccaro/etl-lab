@@ -6,6 +6,7 @@ from typing import Any
 
 import yaml
 from jsonschema import Draft202012Validator
+from weather_etl.models import WeatherLocation
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 LOCATIONS_DIRECTORY = PROJECT_ROOT / "config" / "locations"
@@ -50,7 +51,36 @@ def _validate_location(
         )
 
 
-def load_locations() -> list[dict[str, Any]]:
+def _validate_unique_locations(
+    locations: list[WeatherLocation],
+) -> None:
+    """Reject duplicate IDs and coordinates."""
+
+    seen_ids: set[str] = set()
+    seen_coordinates: set[tuple[float, float]] = set()
+
+    for location in locations:
+        if location.location_id in seen_ids:
+            raise ValueError(
+                f"Duplicate location ID: {location.location_id}"
+            )
+
+        coordinates = (
+            location.latitude,
+            location.longitude,
+        )
+
+        if coordinates in seen_coordinates:
+            raise ValueError(
+                "Duplicate location coordinates: "
+                f"{location.latitude}, {location.longitude}"
+            )
+
+        seen_ids.add(location.location_id)
+        seen_coordinates.add(coordinates)
+
+
+def load_locations() -> list[WeatherLocation]:
     """Load all enabled weather location definitions from config/locations."""
 
     if not LOCATIONS_DIRECTORY.is_dir():
@@ -66,15 +96,26 @@ def load_locations() -> list[dict[str, Any]]:
 
     schema = _load_schema()
     validator = Draft202012Validator(schema)
-    locations: list[dict[str, Any]] = []
+    locations: list[WeatherLocation] = []
+    all_locations: list[WeatherLocation] = []
 
     for path in yaml_files:
-        location = _load_location_file(path)
-        _validate_location(location, validator, path)
+        location_data = _load_location_file(path)
+        _validate_location(location_data, validator, path)
 
-        if location["enabled"]:
+        location = WeatherLocation.model_validate(location_data)
+
+        if location.location_id != path.stem:
+            raise ValueError(
+                f"Location ID '{location.location_id}' does not match "
+                f"filename '{path.name}'."
+            )
+
+        all_locations.append(location)
+
+        if location.enabled:
             locations.append(location)
 
+    _validate_unique_locations(all_locations)
+
     return locations
-
-
