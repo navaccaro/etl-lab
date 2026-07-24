@@ -13,12 +13,12 @@ LOCATIONS_DIRECTORY = PROJECT_ROOT / "config" / "locations"
 SCHEMA_PATH = PROJECT_ROOT / "config" / "schemas" / "weather-location.schema.json"
 
 
-def _load_schema() -> dict[str, Any]:
+def _load_schema(path: Path) -> dict[str, Any]:
     """Load and return the location schema from disk."""
 
-    with SCHEMA_PATH.open("r", encoding="utf-8") as handle:
+    with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
-
+        
 
 def _load_location_file(path: Path) -> dict[str, Any]:
     """Load a single YAML location file and return its parsed data."""
@@ -80,21 +80,25 @@ def _validate_unique_locations(
         seen_coordinates.add(coordinates)
 
 
-def load_locations() -> list[WeatherLocation]:
+def load_locations(
+    locations_directory: Path = LOCATIONS_DIRECTORY,
+    schema_path: Path = SCHEMA_PATH,
+) -> list[WeatherLocation]:
     """Load all enabled weather location definitions from config/locations."""
 
-    if not LOCATIONS_DIRECTORY.is_dir():
+    if not locations_directory.is_dir():
         raise FileNotFoundError(
-            f"Locations directory not found: {LOCATIONS_DIRECTORY}"
+            f"Locations directory not found: {locations_directory}"
         )
 
-    yaml_files = sorted(LOCATIONS_DIRECTORY.glob("*.yaml"))
+    yaml_files = sorted(locations_directory.glob("*.yaml"))
+
     if not yaml_files:
         raise FileNotFoundError(
-            f"No YAML location files found in: {LOCATIONS_DIRECTORY}"
+            f"No YAML location files found in: {locations_directory}"
         )
 
-    schema = _load_schema()
+    schema = _load_schema(schema_path)
     validator = Draft202012Validator(schema)
     locations: list[WeatherLocation] = []
     all_locations: list[WeatherLocation] = []
