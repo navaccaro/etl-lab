@@ -71,7 +71,7 @@ with DAG(
     default_args={
         "owner": "navaccaro",
         "retries": 2,
-        "retry_delay": pendulum.duration(minutes=1),
+        "retry_delay": pendulum.duration(seconds=15),
     },
 ) as dag:
     extract_task = PythonOperator(
