@@ -1,0 +1,7 @@
+version: 1
+location_id: example-city-il
+display_name: Example City, Illinois
+latitude: 41.0
+longitude: -87.0
+timezone: America/Chicago
+enabled: true
