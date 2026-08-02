@@ -30,6 +30,5 @@ airflow/logs/
 airflow/config/
 
 # Legacy Airflow runtime directories
-config/
 logs/
 
