@@ -7,6 +7,7 @@ import yaml
 
 from weather_etl.location_config import (
     LOCATIONS_DIRECTORY,
+    SCHEMA_PATH,
     load_locations,
 )
 
@@ -72,6 +73,29 @@ def write_location(
 
     return destination
 
+def add_location(
+    location: dict[str, object],
+    locations_directory: Path = LOCATIONS_DIRECTORY,
+    schema_path: Path = SCHEMA_PATH,
+) -> Path:
+    """Write and validate a new location configuration."""
+
+    destination = write_location(
+        location=location,
+        locations_directory=locations_directory,
+    )
+
+    try:
+        load_locations(
+            locations_directory=locations_directory,
+            schema_path=schema_path,
+        )
+    except Exception:
+        destination.unlink(missing_ok=True)
+        raise
+
+    return destination
+
 
 def main() -> int:
     """Add and validate a new location configuration."""
@@ -80,13 +104,7 @@ def main() -> int:
     args = parser.parse_args()
 
     location = build_location(args)
-    destination = write_location(location)
-
-    try:
-        load_locations()
-    except Exception:
-        destination.unlink(missing_ok=True)
-        raise
+    destination = add_location(location)
 
     print(f"Created location configuration: {destination}")
     return 0
