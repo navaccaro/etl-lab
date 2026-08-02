@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
-
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class WeatherLocation(BaseModel):
@@ -22,20 +20,3 @@ class WeatherLocation(BaseModel):
     longitude: float = Field(ge=-180, le=180)
     timezone: str = Field(min_length=1)
     enabled: bool
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        if name in self.__class__.model_fields and name in self.__dict__:
-            raise ValidationError.from_exception_data(
-                title="WeatherLocation",
-                line_errors=[
-                    {
-                        "type": "value_error",
-                        "loc": (name,),
-                        "msg": "Instance is immutable",
-                        "input": value,
-                        "ctx": {"error": ValueError("instance is immutable")},
-                    }
-                ],
-            )
-
-        super().__setattr__(name, value)

@@ -4,7 +4,7 @@ import json
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import requests
 
@@ -21,7 +21,7 @@ LONGITUDE = -87.81
 def extract_weather() -> dict[str, Any]:
     """Retrieve current weather data from the API without modifying it."""
 
-    params = {
+    params: dict[str, str | float | list[str]] = {
         "latitude": LATITUDE,
         "longitude": LONGITUDE,
         "current": [
@@ -42,7 +42,12 @@ def extract_weather() -> dict[str, Any]:
 
     logger.info("Weather data retrieved successfully.")
 
-    return response.json()
+    payload = response.json()
+
+    if not isinstance(payload, dict):
+        raise ValueError("Weather API response must contain a JSON object.")
+
+    return cast(dict[str, Any], payload)
 
 
 def save_raw_weather(

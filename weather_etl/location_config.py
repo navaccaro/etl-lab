@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yaml
 from jsonschema import Draft202012Validator
@@ -18,7 +18,12 @@ def _load_schema(path: Path) -> dict[str, Any]:
     """Load and return the location schema from disk."""
 
     with path.open("r", encoding="utf-8") as handle:
-        return json.load(handle)
+        schema = json.load(handle)
+
+    if not isinstance(schema, dict):
+        raise ValueError(f"Schema file {path} must contain a JSON object.")
+
+    return cast(dict[str, Any], schema)
         
 
 def _load_location_file(path: Path) -> dict[str, Any]:
@@ -56,35 +61,6 @@ def _validate_unique_locations(
     locations: list[WeatherLocation],
 ) -> None:
     """Reject duplicate IDs and coordinates."""
-
-    seen_ids: set[str] = set()
-    seen_coordinates: set[tuple[float, float]] = set()
-
-    for location in locations:
-        if location.location_id in seen_ids:
-            raise ValueError(
-                f"Duplicate location ID: {location.location_id}"
-            )
-
-        coordinates = (
-            location.latitude,
-            location.longitude,
-        )
-
-        if coordinates in seen_coordinates:
-            raise ValueError(
-                "Duplicate location coordinates: "
-                f"{location.latitude}, {location.longitude}"
-            )
-
-        seen_ids.add(location.location_id)
-        seen_coordinates.add(coordinates)
-
-
-def _validate_unique_locations(
-    locations: list[WeatherLocation],
-) -> None:
-    """Reject duplicate location IDs and coordinates."""
 
     seen_ids: set[str] = set()
     seen_coordinates: set[tuple[float, float]] = set()

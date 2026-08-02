@@ -4,11 +4,11 @@ import logging
 from pathlib import Path
 
 from dotenv import load_dotenv
-from scripts.logging_config import configure_logging
 
-from scripts.extract_weather import extract_weather, save_raw_weather
-from scripts.load_weather import load_weather
-from scripts.transform_weather import transform_weather
+from weather_etl.extract_weather import extract_weather, save_raw_weather
+from weather_etl.load_weather import load_weather
+from weather_etl.logging_config import configure_logging
+from weather_etl.transform_weather import transform_weather
 
 logger = logging.getLogger(__name__)
 
