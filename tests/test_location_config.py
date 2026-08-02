@@ -45,6 +45,7 @@ def test_location_is_immutable() -> None:
     with pytest.raises(ValidationError):
         location.latitude = 0
 
+
 def write_schema(path: Path) -> None:
     schema = {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -112,6 +113,7 @@ def write_location(
         encoding="utf-8",
     )
 
+
 def test_missing_locations_directory_raises(
     tmp_path: Path,
 ) -> None:
@@ -167,6 +169,7 @@ def test_disabled_location_is_not_returned(
     )
 
     assert locations == []
+
 
 def test_malformed_yaml_raises(tmp_path: Path) -> None:
     locations_directory = tmp_path / "locations"
@@ -288,6 +291,8 @@ def test_location_id_must_match_filename(
             locations_directory=locations_directory,
             schema_path=schema_path,
         )
+
+
 def test_duplicate_coordinates_raise(
     tmp_path: Path,
 ) -> None:
@@ -317,6 +322,7 @@ def test_duplicate_coordinates_raise(
             locations_directory=locations_directory,
             schema_path=schema_path,
         )
+
 
 def test_validate_unique_locations_duplicate_ids_raise() -> None:
     locations = [

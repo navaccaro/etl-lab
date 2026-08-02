@@ -83,9 +83,7 @@ def test_add_location_creates_yaml(tmp_path: Path) -> None:
 
     assert destination.exists()
 
-    contents = yaml.safe_load(
-        destination.read_text(encoding="utf-8")
-    )
+    contents = yaml.safe_load(destination.read_text(encoding="utf-8"))
 
     assert contents == valid_location()
 

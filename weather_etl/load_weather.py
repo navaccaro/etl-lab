@@ -78,9 +78,7 @@ def get_connection_string() -> str:
         "POSTGRES_PASSWORD",
     ]
 
-    missing_variables = [
-        name for name in required_variables if not os.getenv(name)
-    ]
+    missing_variables = [name for name in required_variables if not os.getenv(name)]
 
     if missing_variables:
         raise RuntimeError(

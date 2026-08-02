@@ -24,7 +24,7 @@ def _load_schema(path: Path) -> dict[str, Any]:
         raise ValueError(f"Schema file {path} must contain a JSON object.")
 
     return cast(dict[str, Any], schema)
-        
+
 
 def _load_location_file(path: Path) -> dict[str, Any]:
     """Load a single YAML location file and return its parsed data."""
@@ -67,9 +67,7 @@ def _validate_unique_locations(
 
     for location in locations:
         if location.location_id in seen_ids:
-            raise ValueError(
-                f"Duplicate location ID: {location.location_id}"
-            )
+            raise ValueError(f"Duplicate location ID: {location.location_id}")
 
         coordinates = (
             location.latitude,
@@ -93,9 +91,7 @@ def load_locations(
     """Load all enabled weather location definitions from config/locations."""
 
     if not locations_directory.is_dir():
-        raise FileNotFoundError(
-            f"Locations directory not found: {locations_directory}"
-        )
+        raise FileNotFoundError(f"Locations directory not found: {locations_directory}")
 
     yaml_files = sorted(locations_directory.glob("*.yaml"))
 
@@ -124,8 +120,4 @@ def load_locations(
 
     _validate_unique_locations(all_locations)
 
-    return [
-        location
-        for location in all_locations
-        if location.enabled
-    ]
+    return [location for location in all_locations if location.enabled]

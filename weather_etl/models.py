@@ -12,9 +12,7 @@ class WeatherLocation(BaseModel):
     )
 
     version: int = Field(default=1, ge=1)
-    location_id: str = Field(
-        pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
-    )
+    location_id: str = Field(pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
     display_name: str = Field(min_length=3, max_length=100)
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)

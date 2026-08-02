@@ -26,9 +26,7 @@ def transform_weather(payload: dict[str, Any]) -> dict[str, Any]:
         "wind_speed_10m",
     ]
 
-    missing_fields = [
-        field for field in required_fields if field not in current
-    ]
+    missing_fields = [field for field in required_fields if field not in current]
 
     if missing_fields:
         raise ValueError(

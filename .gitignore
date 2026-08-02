@@ -32,3 +32,4 @@ airflow/config/
 # Legacy Airflow runtime directories
 logs/
 
+*.egg-info/

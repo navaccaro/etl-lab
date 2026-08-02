@@ -24,14 +24,23 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      - name: Install project
+      - name: Install project and development dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e .
-          python -m pip install pytest
+          python -m pip install -r requirements/dev.txt
 
       - name: Validate location configuration
         run: python scripts/validate_locations.py
 
       - name: Run tests
         run: python -m pytest
+
+      - name: Run Ruff
+        run: ruff check .
+
+      - name: Check Black formatting
+        run: black --check .
+
+      - name: Run mypy
+        run: mypy weather_etl scripts

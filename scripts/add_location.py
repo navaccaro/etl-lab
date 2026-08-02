@@ -58,9 +58,7 @@ def write_location(
     destination = locations_directory / f"{location_id}.yaml"
 
     if destination.exists():
-        raise FileExistsError(
-            f"Location configuration already exists: {destination}"
-        )
+        raise FileExistsError(f"Location configuration already exists: {destination}")
 
     destination.write_text(
         yaml.safe_dump(
@@ -72,6 +70,7 @@ def write_location(
     )
 
     return destination
+
 
 def add_location(
     location: dict[str, object],
