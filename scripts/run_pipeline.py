@@ -10,7 +10,6 @@ from weather_etl.load_weather import load_weather
 from weather_etl.logging_config import configure_logging
 from weather_etl.transform_weather import transform_weather
 
-
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

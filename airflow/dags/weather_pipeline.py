@@ -5,13 +5,12 @@ from pathlib import Path
 from typing import Any
 
 import pendulum
-from airflow import DAG
 from airflow.providers.standard.operators.python import PythonOperator
 
+from airflow import DAG
 from weather_etl.extract_weather import extract_weather, save_raw_weather
 from weather_etl.load_weather import load_weather
 from weather_etl.transform_weather import transform_weather
-
 
 logger = logging.getLogger(__name__)
 

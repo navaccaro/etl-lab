@@ -6,6 +6,7 @@ from typing import Any
 
 import yaml
 from jsonschema import Draft202012Validator
+
 from weather_etl.models import WeatherLocation
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -129,7 +130,6 @@ def load_locations(
 
     schema = _load_schema(schema_path)
     validator = Draft202012Validator(schema)
-    locations: list[WeatherLocation] = []
     all_locations: list[WeatherLocation] = []
 
     for path in yaml_files:

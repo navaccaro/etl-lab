@@ -6,8 +6,7 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from weather_etl.location_config import load_locations
-from weather_etl.location_config import _validate_unique_locations
+from weather_etl.location_config import _validate_unique_locations, load_locations
 from weather_etl.models import WeatherLocation
 
 
@@ -289,40 +288,6 @@ def test_location_id_must_match_filename(
             locations_directory=locations_directory,
             schema_path=schema_path,
         )
-
-def test_duplicate_location_ids_raise(
-    tmp_path: Path,
-) -> None:
-    locations_directory = tmp_path / "locations"
-    locations_directory.mkdir()
-
-    schema_path = tmp_path / "schema.json"
-    write_schema(schema_path)
-
-    write_location(
-        locations_directory / "first-location.yaml",
-        location_id="shared-id",
-        latitude=41.0,
-        longitude=-87.0,
-    )
-
-    write_location(
-        locations_directory / "second-location.yaml",
-        location_id="shared-id",
-        latitude=42.0,
-        longitude=-88.0,
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="Duplicate location ID",
-    ):
-        load_locations(
-            locations_directory=locations_directory,
-            schema_path=schema_path,
-        )
-
-
 def test_duplicate_coordinates_raise(
     tmp_path: Path,
 ) -> None:
@@ -353,7 +318,7 @@ def test_duplicate_coordinates_raise(
             schema_path=schema_path,
         )
 
-def test_duplicate_location_ids_raise() -> None:
+def test_validate_unique_locations_duplicate_ids_raise() -> None:
     locations = [
         WeatherLocation(
             version=1,

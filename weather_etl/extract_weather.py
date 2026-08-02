@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import logging
 import json
-from datetime import datetime, timezone
+import logging
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import requests
-
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +53,7 @@ def save_raw_weather(
 
     output_directory.mkdir(parents=True, exist_ok=True)
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     output_path = output_directory / f"weather_{timestamp}.json"
 
     with output_path.open("w", encoding="utf-8") as file:
