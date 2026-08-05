@@ -30,17 +30,17 @@ jobs:
           python -m pip install -e .
           python -m pip install -r requirements/dev.txt
 
-      - name: Validate location configuration
+      - name: Validate configuration
         run: python scripts/validate_locations.py
 
       - name: Run tests
         run: python -m pytest
 
-      - name: Run Ruff
+      - name: Lint
         run: ruff check .
 
-      - name: Check Black formatting
-        run: black --check .
+      - name: Verify formatting
+        run: ruff format --check .
 
-      - name: Run mypy
+      - name: Type check
         run: mypy weather_etl scripts

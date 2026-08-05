@@ -5,6 +5,7 @@ import logging
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
+from weather_etl.models import WeatherLocation
 
 import requests
 
@@ -13,17 +14,15 @@ logger = logging.getLogger(__name__)
 
 API_URL = "https://api.open-meteo.com/v1/forecast"
 
-# Approximate coordinates for Forest Park, Illinois.
-LATITUDE = 41.88
-LONGITUDE = -87.81
 
-
-def extract_weather() -> dict[str, Any]:
-    """Retrieve current weather data from the API without modifying it."""
+def extract_weather(
+    location: WeatherLocation,
+) -> dict[str, Any]:
+    """Retrieve current weather data for one configured location."""
 
     params: dict[str, str | float | list[str]] = {
-        "latitude": LATITUDE,
-        "longitude": LONGITUDE,
+        "latitude": location.latitude,
+        "longitude": location.longitude,
         "current": [
             "temperature_2m",
             "relative_humidity_2m",
@@ -32,10 +31,10 @@ def extract_weather() -> dict[str, Any]:
             "weather_code",
             "wind_speed_10m",
         ],
-        "timezone": "America/Chicago",
+        "timezone": location.timezone,
     }
 
-    logger.info("Requesting weather data from Open-Meteo.")
+    logger.info("Requesting weather data from Open-Meteo for %s.", location.location_id)
 
     response = requests.get(API_URL, params=params, timeout=30)
     response.raise_for_status()
