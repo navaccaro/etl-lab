@@ -91,6 +91,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ./weather_etl:/opt/airflow/project/weather_etl
+    - ./config:/opt/airflow/project/config:ro
     - ./data:/opt/airflow/project/data
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:

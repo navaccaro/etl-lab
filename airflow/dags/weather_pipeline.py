@@ -6,10 +6,12 @@ from typing import Any
 
 import pendulum
 from airflow.providers.standard.operators.python import PythonOperator
+from airflow.sdk import DAG, TaskGroup
 
-from airflow import DAG
 from weather_etl.extract_weather import extract_weather, save_raw_weather
 from weather_etl.load_weather import load_weather
+from weather_etl.location_config import load_locations
+from weather_etl.models import WeatherLocation
 from weather_etl.transform_weather import transform_weather
 
 logger = logging.getLogger(__name__)
@@ -17,29 +19,55 @@ logger = logging.getLogger(__name__)
 RAW_DATA_DIRECTORY = Path("/opt/airflow/project/data/raw")
 
 
-def extract_and_save_weather() -> dict[str, Any]:
-    """Extract weather data, preserve the raw response, and return the payload."""
+def extract_and_save_weather(
+    location_data: dict[str, Any],
+) -> dict[str, Any]:
+    """Extract and preserve raw weather data for one location."""
 
-    logger.info("Starting weather extraction.")
+    location = WeatherLocation.model_validate(location_data)
 
-    payload = extract_weather()
-    raw_file = save_raw_weather(payload, RAW_DATA_DIRECTORY)
+    logger.info(
+        "Starting weather extraction for %s.",
+        location.location_id,
+    )
 
-    logger.info("Raw weather payload saved to %s", raw_file)
+    payload = extract_weather(location)
+
+    raw_file = save_raw_weather(
+        payload,
+        RAW_DATA_DIRECTORY,
+    )
+
+    logger.info(
+        "Raw weather payload for %s saved to %s.",
+        location.location_id,
+        raw_file,
+    )
 
     return payload
 
 
-def transform_weather_task(payload: dict[str, Any]) -> dict[str, Any]:
-    """Transform and validate the extracted weather payload."""
+def transform_weather_task(
+    payload: dict[str, Any],
+    location_data: dict[str, Any],
+) -> dict[str, Any]:
+    """Transform one location's raw weather payload."""
 
-    logger.info("Starting weather transformation.")
+    location = WeatherLocation.model_validate(location_data)
 
-    record = transform_weather(payload)
+    logger.info(
+        "Starting weather transformation for %s.",
+        location.location_id,
+    )
+
+    record = transform_weather(
+        payload,
+        location,
+    )
 
     logger.info(
         "Transformed observation for %s at %s.",
-        record["location_name"],
+        location.location_id,
         record["observed_at"],
     )
 
@@ -47,11 +75,11 @@ def transform_weather_task(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def load_weather_task(record: dict[str, Any]) -> None:
-    """Load the transformed weather observation into PostgreSQL."""
+    """Load one transformed weather observation."""
 
     logger.info(
         "Loading weather observation for %s at %s.",
-        record["location_name"],
+        record["location_id"],
         record["observed_at"],
     )
 
@@ -60,10 +88,18 @@ def load_weather_task(record: dict[str, Any]) -> None:
     logger.info("Weather observation loaded successfully.")
 
 
+locations = load_locations()
+
+
 with DAG(
     dag_id="weather_etl_pipeline",
-    description="Extract, transform, and load current Forest Park weather data.",
-    start_date=pendulum.datetime(2026, 7, 1, tz="America/Chicago"),
+    description="Extract, transform, and load configured weather locations.",
+    start_date=pendulum.datetime(
+        2026,
+        7,
+        1,
+        tz="America/Chicago",
+    ),
     schedule=None,
     catchup=False,
     tags=["weather", "etl", "learning"],
@@ -73,21 +109,38 @@ with DAG(
         "retry_delay": pendulum.duration(seconds=15),
     },
 ) as dag:
-    extract_task = PythonOperator(
-        task_id="extract_weather",
-        python_callable=extract_and_save_weather,
-    )
+    for location in locations:
+        location_data = location.model_dump()
 
-    transform_task = PythonOperator(
-        task_id="transform_weather",
-        python_callable=transform_weather_task,
-        op_args=[extract_task.output],
-    )
+        group_id = location.location_id.replace("-", "_")
 
-    load_task = PythonOperator(
-        task_id="load_weather",
-        python_callable=load_weather_task,
-        op_args=[transform_task.output],
-    )
+        with TaskGroup(
+            group_id=group_id,
+            tooltip=location.display_name,
+        ):
+            extract_task = PythonOperator(
+                task_id="extract",
+                python_callable=extract_and_save_weather,
+                op_kwargs={
+                    "location_data": location_data,
+                },
+            )
 
-    extract_task >> transform_task >> load_task
+            transform_task = PythonOperator(
+                task_id="transform",
+                python_callable=transform_weather_task,
+                op_kwargs={
+                    "payload": extract_task.output,
+                    "location_data": location_data,
+                },
+            )
+
+            load_task = PythonOperator(
+                task_id="load",
+                python_callable=load_weather_task,
+                op_kwargs={
+                    "record": transform_task.output,
+                },
+            )
+
+            extract_task >> transform_task >> load_task
