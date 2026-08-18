@@ -24,3 +24,7 @@ data/raw/*
 
 # Docker
 postgres_data/
+
+# Airflow runtime files
+airflow/logs/
+airflow/config/
