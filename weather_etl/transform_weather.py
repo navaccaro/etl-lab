@@ -3,10 +3,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from weather_etl.models import WeatherLocation
+
 logger = logging.getLogger(__name__)
 
 
-def transform_weather(payload: dict[str, Any]) -> dict[str, Any]:
+def transform_weather(
+    payload: dict[str, Any],
+    location: WeatherLocation,
+) -> dict[str, Any]:
     """Convert the raw API payload into our destination-table structure."""
 
     logger.info("Transforming weather payload.")
@@ -58,9 +63,10 @@ def transform_weather(payload: dict[str, Any]) -> dict[str, Any]:
     )
 
     return {
-        "location_name": "Forest Park, IL",
-        "latitude": payload["latitude"],
-        "longitude": payload["longitude"],
+        "location_id": location.location_id,
+        "location_name": location.display_name,
+        "latitude": location.latitude,
+        "longitude": location.longitude,
         "observed_at": current["time"],
         "temperature_c": current["temperature_2m"],
         "apparent_temperature_c": current["apparent_temperature"],

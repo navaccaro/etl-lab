@@ -1,6 +1,17 @@
 import pytest
 
+from weather_etl.models import WeatherLocation
 from weather_etl.transform_weather import transform_weather
+
+TEST_LOCATION = WeatherLocation(
+    version=1,
+    location_id="forest-park-il",
+    display_name="Forest Park, Illinois",
+    latitude=41.8795,
+    longitude=-87.8137,
+    timezone="America/Chicago",
+    enabled=True,
+)
 
 
 def make_valid_payload():
@@ -24,13 +35,14 @@ def make_valid_payload():
 def test_valid_weather_payload():
     payload = make_valid_payload()
 
-    record = transform_weather(payload)
+    record = transform_weather(payload, TEST_LOCATION)
 
     assert record["temperature_c"] == 30.2
     assert record["relative_humidity_pct"] == 61
-    assert record["location_name"] == "Forest Park, IL"
-    assert record["latitude"] == 41.88
-    assert record["longitude"] == -87.81
+    assert record["location_id"] == "forest-park-il"
+    assert record["location_name"] == "Forest Park, Illinois"
+    assert record["latitude"] == 41.8795
+    assert record["longitude"] == -87.8137
 
 
 def test_temperature_out_of_range():
@@ -38,7 +50,7 @@ def test_temperature_out_of_range():
     payload["current"]["temperature_2m"] = 500
 
     with pytest.raises(ValueError, match="Temperature out of range"):
-        transform_weather(payload)
+        transform_weather(payload, TEST_LOCATION)
 
 
 def test_humidity_out_of_range():
@@ -46,7 +58,7 @@ def test_humidity_out_of_range():
     payload["current"]["relative_humidity_2m"] = 150
 
     with pytest.raises(ValueError, match="Humidity out of range"):
-        transform_weather(payload)
+        transform_weather(payload, TEST_LOCATION)
 
 
 def test_latitude_out_of_range():
@@ -54,7 +66,7 @@ def test_latitude_out_of_range():
     payload["latitude"] = 900
 
     with pytest.raises(ValueError, match="Latitude out of range"):
-        transform_weather(payload)
+        transform_weather(payload, TEST_LOCATION)
 
 
 def test_longitude_out_of_range():
@@ -62,7 +74,7 @@ def test_longitude_out_of_range():
     payload["longitude"] = 500
 
     with pytest.raises(ValueError, match="Longitude out of range"):
-        transform_weather(payload)
+        transform_weather(payload, TEST_LOCATION)
 
 
 def test_missing_current_section():
@@ -73,7 +85,7 @@ def test_missing_current_section():
         ValueError,
         match="Weather payload does not contain a 'current' section",
     ):
-        transform_weather(payload)
+        transform_weather(payload, TEST_LOCATION)
 
 
 def test_missing_required_field():
@@ -81,4 +93,4 @@ def test_missing_required_field():
     del payload["current"]["temperature_2m"]
 
     with pytest.raises(ValueError, match="missing required fields"):
-        transform_weather(payload)
+        transform_weather(payload, TEST_LOCATION)

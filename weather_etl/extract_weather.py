@@ -5,9 +5,10 @@ import logging
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
-from weather_etl.models import WeatherLocation
 
 import requests
+
+from weather_etl.models import WeatherLocation
 
 logger = logging.getLogger(__name__)
 
