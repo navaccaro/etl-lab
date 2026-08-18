@@ -1,30 +1,29 @@
 from __future__ import annotations
 
-import logging
 import json
-from datetime import datetime, timezone
+import logging
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import requests
 
+from weather_etl.models import WeatherLocation
 
 logger = logging.getLogger(__name__)
 
 
 API_URL = "https://api.open-meteo.com/v1/forecast"
 
-# Approximate coordinates for Forest Park, Illinois.
-LATITUDE = 41.88
-LONGITUDE = -87.81
 
+def extract_weather(
+    location: WeatherLocation,
+) -> dict[str, Any]:
+    """Retrieve current weather data for one configured location."""
 
-def extract_weather() -> dict[str, Any]:
-    """Retrieve current weather data from the API without modifying it."""
-
-    params = {
-        "latitude": LATITUDE,
-        "longitude": LONGITUDE,
+    params: dict[str, str | float | list[str]] = {
+        "latitude": location.latitude,
+        "longitude": location.longitude,
         "current": [
             "temperature_2m",
             "relative_humidity_2m",
@@ -33,17 +32,22 @@ def extract_weather() -> dict[str, Any]:
             "weather_code",
             "wind_speed_10m",
         ],
-        "timezone": "America/Chicago",
+        "timezone": location.timezone,
     }
 
-    logger.info("Requesting weather data from Open-Meteo.")
+    logger.info("Requesting weather data from Open-Meteo for %s.", location.location_id)
 
     response = requests.get(API_URL, params=params, timeout=30)
     response.raise_for_status()
 
     logger.info("Weather data retrieved successfully.")
 
-    return response.json()
+    payload = response.json()
+
+    if not isinstance(payload, dict):
+        raise ValueError("Weather API response must contain a JSON object.")
+
+    return cast(dict[str, Any], payload)
 
 
 def save_raw_weather(
@@ -54,7 +58,7 @@ def save_raw_weather(
 
     output_directory.mkdir(parents=True, exist_ok=True)
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     output_path = output_directory / f"weather_{timestamp}.json"
 
     with output_path.open("w", encoding="utf-8") as file:

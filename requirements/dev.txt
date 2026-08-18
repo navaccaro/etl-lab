@@ -1,0 +1,7 @@
+-r base.txt
+
+pytest
+ruff
+mypy
+types-PyYAML
+types-jsonschema

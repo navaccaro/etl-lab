@@ -1,0 +1,8 @@
+version: 1
+location_id: Example City
+display_name: Example City, Illinois
+latitude: 100.0
+longitude: -200.0
+timezone: America/Chicago
+enabled: true
+unsupported_field: invalid

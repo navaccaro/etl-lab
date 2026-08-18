@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "weather-etl-lab"
+version = "0.1.0"
+description = "Configuration-driven weather ETL pipeline using Python, PostgreSQL, and Apache Airflow."
+requires-python = ">=3.11"
+dynamic = ["dependencies"]
+
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements/base.txt"] }
+
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["weather_etl*"]
+exclude = [
+    "tests*",
+    "scripts*",
+    "dags*",
+]
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "B",
+    "UP",
+]
+
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+no_implicit_optional = true

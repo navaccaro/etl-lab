@@ -1,0 +1,7 @@
+version: 1
+location_id: forest-park-il
+display_name: Forest Park, Illinois
+latitude: 41.8795
+longitude: -87.8137
+timezone: America/Chicago
+enabled: true

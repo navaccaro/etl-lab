@@ -6,13 +6,13 @@ from typing import Any
 
 import psycopg
 
-
 logger = logging.getLogger(__name__)
 
 
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS weather_observations (
     observation_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    location_id TEXT NOT NULL,
     location_name TEXT NOT NULL,
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
@@ -24,13 +24,14 @@ CREATE TABLE IF NOT EXISTS weather_observations (
     weather_code INTEGER,
     wind_speed_kmh DOUBLE PRECISION,
     loaded_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (location_name, observed_at)
+    UNIQUE (location_id, observed_at)
 );
 """
 
 
 INSERT_WEATHER_SQL = """
 INSERT INTO weather_observations (
+    location_id,
     location_name,
     latitude,
     longitude,
@@ -43,6 +44,7 @@ INSERT INTO weather_observations (
     wind_speed_kmh
 )
 VALUES (
+    %(location_id)s,
     %(location_name)s,
     %(latitude)s,
     %(longitude)s,
@@ -54,7 +56,7 @@ VALUES (
     %(weather_code)s,
     %(wind_speed_kmh)s
 )
-ON CONFLICT (location_name, observed_at)
+ON CONFLICT (location_id, observed_at)
 DO UPDATE SET
     latitude = EXCLUDED.latitude,
     longitude = EXCLUDED.longitude,
@@ -79,9 +81,7 @@ def get_connection_string() -> str:
         "POSTGRES_PASSWORD",
     ]
 
-    missing_variables = [
-        name for name in required_variables if not os.getenv(name)
-    ]
+    missing_variables = [name for name in required_variables if not os.getenv(name)]
 
     if missing_variables:
         raise RuntimeError(

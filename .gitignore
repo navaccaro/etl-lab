@@ -28,3 +28,8 @@ postgres_data/
 # Airflow runtime files
 airflow/logs/
 airflow/config/
+
+# Legacy Airflow runtime directories
+logs/
+
+*.egg-info/
